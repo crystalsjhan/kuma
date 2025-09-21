@@ -16,6 +16,7 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   // TextEditingController 선언
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -36,6 +37,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -63,6 +65,11 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       // TODO: Firebase Auth 회원가입 로직 구현
+      // 회원가입 시 필요한 데이터: 이름, 이메일, 비밀번호
+      final name = _nameController.text.trim();
+      // final email = _emailController.text.trim(); // Firebase Auth에서 사용 예정
+      // final password = _passwordController.text; // Firebase Auth에서 사용 예정
+      
       await Future.delayed(const Duration(seconds: 2)); // 임시 딜레이
       
       if (mounted) {
@@ -70,8 +77,8 @@ class _SignupScreenState extends State<SignupScreen> {
         AppRouter.goHome(context);
         
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('회원가입이 완료되었습니다!'),
+          SnackBar(
+            content: Text('$name님, 회원가입이 완료되었습니다!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -178,6 +185,39 @@ class _SignupScreenState extends State<SignupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 이름 입력 필드
+        Text(
+          '이름',
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onBackground,
+          ),
+        ),
+        const SizedBox(height: 8.0),
+        TextFormField(
+          controller: _nameController,
+          keyboardType: TextInputType.name,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            hintText: '이름을 입력해주세요',
+            prefixIcon: Icon(
+              Icons.person_outlined,
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return '이름을 입력해주세요';
+            }
+            if (value.length < 2) {
+              return '이름은 2자 이상이어야 합니다';
+            }
+            return null;
+          },
+        ),
+        
+        const SizedBox(height: 20.0),
+        
         // 이메일 입력 필드
         Text(
           '이메일',

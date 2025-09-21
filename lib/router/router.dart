@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:plant_community_app/providers/auth_providers.dart';
 import 'package:plant_community_app/presentation/pages/login_screen.dart';
 import 'package:plant_community_app/presentation/pages/signup_screen.dart';
+import 'package:plant_community_app/presentation/pages/forgot_password_screen.dart';
 import 'package:plant_community_app/presentation/pages/post_list_page.dart';
 import 'package:plant_community_app/presentation/pages/profile_screen.dart';
 import 'package:plant_community_app/presentation/pages/loading_screen.dart';
@@ -26,8 +27,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         // 디버그 로그 추가
         print('Auth state changed: ${user?.email ?? 'null'}');
         authStateNotifier.value = user;
-        // 리다이렉트 트리거를 위해 강제로 알림
-        authStateNotifier.notifyListeners();
+        // 리다이렉트 트리거를 위해 강제로 알림 (ValueNotifier는 자동으로 알림)
       },
       loading: () {
         // 로딩 중일 때는 현재 값을 유지
@@ -37,7 +37,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         // 에러 발생 시 null로 설정
         print('Auth state error: $error');
         authStateNotifier.value = null;
-        authStateNotifier.notifyListeners();
       },
     );
   });
@@ -124,14 +123,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProfileScreen(),
       ),
       
-      // 비밀번호 찾기 화면 (추후 구현 예정)
+      // 비밀번호 찾기 화면
       GoRoute(
         path: '/forgot-password',
         name: 'forgotPassword',
-        builder: (context, state) => const _ComingSoonPage(
-          title: '비밀번호 찾기',
-          subtitle: '비밀번호를 재설정할 수 있습니다',
-        ),
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
     ],
     
@@ -187,61 +183,3 @@ bool _isAuthRoute(String path) {
          path == '/loading';
 }
 
-/// 준비 중 화면
-class _ComingSoonPage extends StatelessWidget {
-  const _ComingSoonPage({
-    required this.title,
-    required this.subtitle,
-  });
-  
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.construction,
-                size: 80.0,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 24.0),
-              Text(
-                '준비 중입니다',
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8.0),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32.0),
-              ElevatedButton.icon(
-                onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('돌아가기'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

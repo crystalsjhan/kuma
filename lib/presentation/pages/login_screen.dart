@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:plant_community_app/core/router/app_router.dart';
 
 /// 로그인 화면
@@ -309,14 +310,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
-            onPressed: () {
-              // TODO: 비밀번호 찾기 화면으로 이동
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('비밀번호 찾기 기능은 준비 중입니다'),
-                ),
-              );
-            },
+            onPressed: () => GoRouter.of(context).go('/forgot-password'),
             child: Text(
               '비밀번호를 잊으셨나요?',
               style: theme.textTheme.bodyMedium?.copyWith(

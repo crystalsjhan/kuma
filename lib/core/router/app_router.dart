@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:plant_community_app/presentation/pages/post_list_page.dart';
 import 'package:plant_community_app/presentation/pages/login_screen.dart';
 import 'package:plant_community_app/presentation/pages/signup_screen.dart';
+import 'package:plant_community_app/presentation/pages/profile_screen.dart';
 
 /// 앱의 라우팅 설정
 /// 
@@ -96,15 +97,11 @@ class AppRouter {
         ),
       ),
       
-      // 프로필 화면 (추후 구현 예정)
+      // 프로필 화면
       GoRoute(
         path: profile,
         name: 'profile',
-        builder: (context, state) => _buildComingSoonPage(
-          context,
-          title: '프로필',
-          subtitle: '사용자 프로필을 확인해보세요',
-        ),
+        builder: (context, state) => const ProfileScreen(),
       ),
       
       // 설정 화면 (추후 구현 예정)

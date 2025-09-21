@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:plant_community_app/core/constants/app_constants.dart';
 import 'package:plant_community_app/core/router/app_router.dart';
 import 'package:plant_community_app/domain/entities/post.dart';
@@ -40,11 +41,27 @@ class PostListPage extends ConsumerWidget {
       title: const Text(AppConstants.appName),
       centerTitle: true,
       actions: [
-        // 로그인 버튼
-        IconButton(
-          onPressed: () => AppRouter.goToLogin(context),
-          icon: const Icon(Icons.login),
-          tooltip: '로그인',
+        // Firebase Auth 상태에 따른 동적 버튼
+        StreamBuilder<User?>(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            final user = snapshot.data;
+            if (user != null) {
+              // 로그인된 상태: 프로필 버튼 표시
+              return IconButton(
+                onPressed: () => AppRouter.goToProfile(context),
+                icon: const Icon(Icons.person),
+                tooltip: '프로필',
+              );
+            } else {
+              // 로그인되지 않은 상태: 로그인 버튼 표시
+              return IconButton(
+                onPressed: () => AppRouter.goToLogin(context),
+                icon: const Icon(Icons.login),
+                tooltip: '로그인',
+              );
+            }
+          },
         ),
         // 검색 버튼
         IconButton(

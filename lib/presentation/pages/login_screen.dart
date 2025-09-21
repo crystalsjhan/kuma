@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:plant_community_app/core/router/app_router.dart';
 
 /// 로그인 화면
@@ -39,28 +40,92 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    // 1. 이메일과 비밀번호 가져오기
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이메일과 비밀번호를 입력해주세요.'),
+        ),
+      );
+      return;
+    }
+
+    // 2. 로딩 상태 설정
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // TODO: Firebase Auth 로그인 로직 구현
-      await Future.delayed(const Duration(seconds: 2)); // 임시 딜레이
+      // 3. Firebase Auth로 로그인
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email, 
+        password: password
+      );
       
       if (mounted) {
+        // 4. 성공 시 SnackBar 표시
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('로그인 성공!'),
+            backgroundColor: Colors.green,
+          ),
+        );
         // 로그인 성공 시 홈 화면으로 이동
         AppRouter.goHome(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('로그인에 실패했습니다: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        // 5. FirebaseAuthException 처리
+        if (e is FirebaseAuthException) {
+          String errorMessage;
+          // 실제 Firebase Auth 에러 코드를 확인하여 디버깅
+          print('Firebase Auth Error Code: ${e.code}');
+          print('Firebase Auth Error Message: ${e.message}');
+          
+          switch (e.code) {
+            case 'user-not-found':
+            case 'wrong-password':
+            case 'invalid-credential':
+              errorMessage = '이메일 또는 비밀번호가 올바르지 않습니다.';
+              break;
+            case 'invalid-email':
+              errorMessage = '유효하지 않은 이메일 형식입니다.';
+              break;
+            case 'user-disabled':
+              errorMessage = '비활성화된 계정입니다.';
+              break;
+            case 'too-many-requests':
+              errorMessage = '너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
+              break;
+            case 'network-request-failed':
+              errorMessage = '네트워크 연결을 확인해주세요.';
+              break;
+            default:
+              errorMessage = '로그인 실패: ${e.message} (코드: ${e.code})';
+          }
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        } else {
+          // 기타 예외 처리
+          print('Non-Firebase Exception: ${e.toString()}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('로그인 실패: ${e.toString()}'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
       }
     } finally {
+      // 6. 로딩 상태 해제
       if (mounted) {
         setState(() {
           _isLoading = false;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:plant_community_app/core/router/app_router.dart';
 
 /// 회원가입 화면
@@ -59,40 +60,80 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
+    // 1. 이메일과 비밀번호 가져오기
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이메일과 비밀번호를 입력해주세요.'),
+        ),
+      );
+      return;
+    }
+
+    // 2. 로딩 상태 설정
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // TODO: Firebase Auth 회원가입 로직 구현
-      // 회원가입 시 필요한 데이터: 이름, 이메일, 비밀번호
-      final name = _nameController.text.trim();
-      // final email = _emailController.text.trim(); // Firebase Auth에서 사용 예정
-      // final password = _passwordController.text; // Firebase Auth에서 사용 예정
+      // 3. Firebase Auth로 회원가입 - UserCredential 객체 반환받기
+      final UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email, 
+        password: password
+      );
       
-      await Future.delayed(const Duration(seconds: 2)); // 임시 딜레이
+      // 새로 생성된 사용자 정보에 접근
+      final user = userCredential.user;
       
-      if (mounted) {
-        // 회원가입 성공 시 홈 화면으로 이동
-        AppRouter.goHome(context);
-        
+      if (mounted && user != null) {
+        // 4. 성공 시 SnackBar 표시 (사용자 정보 포함)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('$name님, 회원가입이 완료되었습니다!'),
+            content: Text('회원 가입 성공!\nUID: ${user.uid}\nEmail: ${user.email}'),
             backgroundColor: Colors.green,
           ),
         );
+        
+        // TODO: 성공 후 화면 이동 로직 (홈 화면이나 추가 프로필 설정 화면 등)
+        // AppRouter.goHome(context); // 화면 이동은 이후에 관리
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('회원가입에 실패했습니다: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        // 5. FirebaseAuthException 처리
+        if (e is FirebaseAuthException) {
+          String errorMessage;
+          switch (e.code) {
+            case 'weak-password':
+              errorMessage = '비밀번호는 6자리 이상이어야 합니다.';
+              break;
+            case 'email-already-in-use':
+              errorMessage = '이미 사용 중인 이메일입니다.';
+              break;
+            default:
+              errorMessage = '회원 가입 실패: ${e.message}';
+          }
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        } else {
+          // 기타 예외 처리
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('회원 가입 실패: ${e.toString()}'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
       }
     } finally {
+      // 6. 로딩 상태 해제
       if (mounted) {
         setState(() {
           _isLoading = false;

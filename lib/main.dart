@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_community_app/core/constants/app_constants.dart';
-import 'package:plant_community_app/core/router/app_router.dart';
+import 'package:plant_community_app/router/router.dart';
 import 'package:plant_community_app/core/theme/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 /// 반려 식물 커뮤니티 앱의 메인 진입점
 /// 
@@ -13,7 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 /// - Clean Architecture
 /// - Riverpod 상태 관리
 /// - go_router 라우팅
-/// - Material Design 3
+/// - Material Design 3  
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -29,11 +28,13 @@ void main() async{
 }
 
 /// 반려 식물 커뮤니티 메인 앱 클래스
-class PlantCommunityApp extends StatelessWidget {
+class PlantCommunityApp extends ConsumerWidget {
   const PlantCommunityApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(goRouterProvider);
+    
     return MaterialApp.router(
       // 앱 기본 정보
       title: AppConstants.appName,
@@ -45,7 +46,7 @@ class PlantCommunityApp extends StatelessWidget {
       themeMode: ThemeMode.system, // 시스템 설정에 따라 자동 변경
       
       // 라우터 설정
-      routerConfig: AppRouter.router,
+      routerConfig: router,
       
       // 빌더를 통한 추가 설정
       builder: (context, child) {

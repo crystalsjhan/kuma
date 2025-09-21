@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:plant_community_app/core/constants/app_constants.dart';
 import 'package:plant_community_app/core/router/app_router.dart';
 import 'package:plant_community_app/domain/entities/post.dart';
 import 'package:plant_community_app/presentation/providers/post_providers.dart';
 import 'package:plant_community_app/presentation/widgets/post_card.dart';
+import 'package:plant_community_app/providers/auth_providers.dart';
 
 /// 게시물 목록 화면
 /// 
@@ -42,11 +42,11 @@ class PostListPage extends ConsumerWidget {
       centerTitle: true,
       actions: [
         // Firebase Auth 상태에 따른 동적 버튼
-        StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            final user = snapshot.data;
-            if (user != null) {
+        Consumer(
+          builder: (context, ref, child) {
+            final isLoggedIn = ref.watch(isLoggedInProvider);
+            
+            if (isLoggedIn) {
               // 로그인된 상태: 프로필 버튼 표시
               return IconButton(
                 onPressed: () => AppRouter.goToProfile(context),

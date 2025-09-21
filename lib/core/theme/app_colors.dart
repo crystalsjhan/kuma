@@ -63,3 +63,4 @@ class AppColors {
     outline: outlineDark,
   );
 }
+

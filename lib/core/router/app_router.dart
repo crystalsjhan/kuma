@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:plant_community_app/presentation/pages/post_list_page.dart';
+import 'package:plant_community_app/presentation/pages/login_screen.dart';
+import 'package:plant_community_app/presentation/pages/signup_screen.dart';
 
 /// 앱의 라우팅 설정
 /// 
@@ -9,6 +11,8 @@ import 'package:plant_community_app/presentation/pages/post_list_page.dart';
 /// 이 파일에서 라우트를 관리합니다.
 class AppRouter {
   static const String home = '/';
+  static const String login = '/login';
+  static const String signup = '/signup';
   static const String postDetail = '/post/:id';
   static const String createPost = '/create-post';
   static const String editPost = '/edit-post/:id';
@@ -18,7 +22,7 @@ class AppRouter {
 
   /// 라우터 인스턴스
   static final GoRouter router = GoRouter(
-    initialLocation: home,
+    initialLocation: login,
     debugLogDiagnostics: true,
     routes: [
       // 홈 화면 (게시물 목록)
@@ -26,6 +30,20 @@ class AppRouter {
         path: home,
         name: 'home',
         builder: (context, state) => const PostListPage(),
+      ),
+      
+      // 로그인 화면
+      GoRoute(
+        path: login,
+        name: 'login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      
+      // 회원가입 화면
+      GoRoute(
+        path: signup,
+        name: 'signup',
+        builder: (context, state) => const SignupScreen(),
       ),
       
       // 게시물 상세 화면 (추후 구현 예정)
@@ -109,6 +127,16 @@ class AppRouter {
   /// 홈 화면으로 이동
   static void goHome(BuildContext context) {
     context.go(home);
+  }
+  
+  /// 로그인 화면으로 이동
+  static void goToLogin(BuildContext context) {
+    context.go(login);
+  }
+  
+  /// 회원가입 화면으로 이동
+  static void goToSignup(BuildContext context) {
+    context.go(signup);
   }
   
   /// 게시물 상세 화면으로 이동

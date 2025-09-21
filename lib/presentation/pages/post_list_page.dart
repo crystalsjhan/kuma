@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_community_app/core/constants/app_constants.dart';
+import 'package:plant_community_app/core/router/app_router.dart';
 import 'package:plant_community_app/domain/entities/post.dart';
 import 'package:plant_community_app/presentation/providers/post_providers.dart';
 import 'package:plant_community_app/presentation/widgets/post_card.dart';
@@ -39,6 +40,12 @@ class PostListPage extends ConsumerWidget {
       title: const Text(AppConstants.appName),
       centerTitle: true,
       actions: [
+        // 로그인 버튼
+        IconButton(
+          onPressed: () => AppRouter.goToLogin(context),
+          icon: const Icon(Icons.login),
+          tooltip: '로그인',
+        ),
         // 검색 버튼
         IconButton(
           onPressed: () => _showSearchDialog(context, ref),
@@ -58,7 +65,6 @@ class PostListPage extends ConsumerWidget {
   /// 필터 탭 구성
   Widget _buildFilterTabs(BuildContext context, WidgetRef ref) {
     final selectedType = ref.watch(selectedPostTypeProvider);
-    final theme = Theme.of(context);
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -247,15 +253,34 @@ class PostListPage extends ConsumerWidget {
             ),
             const SizedBox(height: 16.0),
             Text(
-              '아직 게시물이 없어요',
+              '반려 식물 커뮤니티에 오신 것을 환영합니다!',
               style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8.0),
             Text(
-              '첫 번째 게시물을 작성해보세요!',
+              '로그인하여 다른 식물 애호가들과 소통해보세요',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => AppRouter.goToLogin(context),
+                  icon: const Icon(Icons.login),
+                  label: const Text('로그인'),
+                ),
+                const SizedBox(width: 12.0),
+                OutlinedButton.icon(
+                  onPressed: () => AppRouter.goToSignup(context),
+                  icon: const Icon(Icons.person_add),
+                  label: const Text('회원가입'),
+                ),
+              ],
             ),
           ],
         ),

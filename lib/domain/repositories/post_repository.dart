@@ -87,3 +87,4 @@ abstract class PostRepository {
   /// - Error<void>: 실패 시 Failure 정보
   Future<Result<void>> deletePost(String id);
 }
+

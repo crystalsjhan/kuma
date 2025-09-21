@@ -40,3 +40,4 @@ class AppConstants {
   static const String postTypeQuestion = 'question';
   static const String postTypeDiary = 'diary';
 }
+

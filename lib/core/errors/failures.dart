@@ -85,3 +85,4 @@ extension ResultExtensions<T> on Result<T> {
     };
   }
 }
+

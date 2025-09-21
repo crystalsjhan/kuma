@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_community_app/core/constants/app_constants.dart';
 import 'package:plant_community_app/core/router/app_router.dart';
 import 'package:plant_community_app/core/theme/app_theme.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// 반려 식물 커뮤니티 앱의 메인 진입점
 /// 
@@ -11,9 +14,11 @@ import 'package:plant_community_app/core/theme/app_theme.dart';
 /// - Riverpod 상태 관리
 /// - go_router 라우팅
 /// - Material Design 3
-void main() {
+void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform,);
+
   runApp(
     // Riverpod ProviderScope로 앱 전체를 감쌉니다.
     // 이를 통해 앱 전반에서 Provider들을 사용할 수 있습니다.

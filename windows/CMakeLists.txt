@@ -1,5 +1,52 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
+
+# Force Visual Studio 2026 Insiders if available
+if(WIN32 AND NOT CMAKE_GENERATOR)
+  # Try to find Visual Studio 2026 Insiders first
+  set(VS_PATHS
+    "C:/Program Files/Microsoft Visual Studio/2026/Insiders"
+    "C:/Program Files/Microsoft Visual Studio/2026/Community"
+    "C:/Program Files/Microsoft Visual Studio/2025/Insiders"
+    "C:/Program Files/Microsoft Visual Studio/2025/Community"
+    "C:/Program Files/Microsoft Visual Studio/2024/Insiders"
+    "C:/Program Files/Microsoft Visual Studio/2024/Community"
+    "C:/Program Files/Microsoft Visual Studio/2023/Community"
+    "C:/Program Files/Microsoft Visual Studio/2022/Community"
+  )
+  
+  foreach(VS_PATH ${VS_PATHS})
+    if(EXISTS "${VS_PATH}")
+      find_program(MSBUILD_EXE
+        NAMES MSBuild.exe
+        PATHS "${VS_PATH}/MSBuild/Current/Bin"
+        NO_DEFAULT_PATH
+      )
+      if(MSBUILD_EXE)
+        # Set appropriate generator based on path
+        if(VS_PATH MATCHES "2026.*Insiders")
+          set(CMAKE_GENERATOR "Visual Studio 19 2026" CACHE STRING "CMake generator" FORCE)
+        elseif(VS_PATH MATCHES "2026.*Community")
+          set(CMAKE_GENERATOR "Visual Studio 19 2026" CACHE STRING "CMake generator" FORCE)
+        elseif(VS_PATH MATCHES "2025.*Insiders")
+          set(CMAKE_GENERATOR "Visual Studio 18 2025" CACHE STRING "CMake generator" FORCE)
+        elseif(VS_PATH MATCHES "2025.*Community")
+          set(CMAKE_GENERATOR "Visual Studio 18 2025" CACHE STRING "CMake generator" FORCE)
+        elseif(VS_PATH MATCHES "2024.*Insiders")
+          set(CMAKE_GENERATOR "Visual Studio 17 2024" CACHE STRING "CMake generator" FORCE)
+        elseif(VS_PATH MATCHES "2024.*Community")
+          set(CMAKE_GENERATOR "Visual Studio 17 2024" CACHE STRING "CMake generator" FORCE)
+        elseif(VS_PATH MATCHES "2023")
+          set(CMAKE_GENERATOR "Visual Studio 17 2022" CACHE STRING "CMake generator" FORCE)
+        elseif(VS_PATH MATCHES "2022")
+          set(CMAKE_GENERATOR "Visual Studio 17 2022" CACHE STRING "CMake generator" FORCE)
+        endif()
+        break()
+      endif()
+    endif()
+  endforeach()
+endif()
+
 project(plant_community_app LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change

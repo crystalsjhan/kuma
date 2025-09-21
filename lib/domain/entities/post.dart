@@ -123,3 +123,4 @@ enum PostType {
   @override
   String toString() => value;
 }
+

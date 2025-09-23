@@ -1,8 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:plant_community_app/core/constants/app_constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:plant_community_app/core/utils/date_formatter.dart';
 import 'package:plant_community_app/domain/entities/post.dart';
+import 'package:plant_community_app/data/models/post_model.dart';
 
 /// 게시물 카드 위젯
 /// 
@@ -20,6 +21,8 @@ class PostCard extends StatelessWidget {
     this.onTap,
     this.showImage = true,
     this.maxLines = 3,
+    this.onEdit,
+    this.onDelete,
   });
 
   /// 표시할 게시물 엔티티
@@ -33,6 +36,12 @@ class PostCard extends StatelessWidget {
 
   /// 내용 미리보기 최대 라인 수
   final int maxLines;
+
+  /// 수정 콜백
+  final VoidCallback? onEdit;
+
+  /// 삭제 콜백
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +121,7 @@ class PostCard extends StatelessWidget {
   /// 게시물 타입 배지
   Widget _buildTypeBadge(ColorScheme colorScheme, TextTheme textTheme) {
     final isQuestion = post.type == PostType.question;
+    final typeText = post.type.displayName;
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -120,7 +130,7 @@ class PostCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12.0),
       ),
       child: Text(
-        post.type.displayName,
+        typeText,
         style: textTheme.labelMedium?.copyWith(
           color: isQuestion ? colorScheme.onPrimary : colorScheme.onSecondary,
           fontWeight: FontWeight.bold,
@@ -206,19 +216,40 @@ class PostCard extends StatelessWidget {
         
         const Spacer(),
         
-        // 더보기 버튼
-        IconButton(
-          onPressed: onTap,
-          icon: Icon(
-            Icons.arrow_forward_ios,
-            size: 16.0,
-            color: colorScheme.onSurface.withOpacity(0.5),
+        // 더보기 버튼 (길게 누르면 메뉴 표시)
+        Builder(
+          builder: (context) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 수정/삭제 버튼 (본인 게시물인 경우에만 표시)
+              if (_canEditOrDelete()) ...[
+                IconButton(
+                  onPressed: () => _showActionMenu(context),
+                  icon: Icon(
+                    Icons.more_vert,
+                    size: 20.0,
+                    color: colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 32.0,
+                    minHeight: 32.0,
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+                const SizedBox(width: 8.0),
+              ],
+              
+              // 상세보기 버튼
+              GestureDetector(
+                onTap: onTap,
+                child: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16.0,
+                  color: colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ),
+            ],
           ),
-          constraints: const BoxConstraints(
-            minWidth: 32.0,
-            minHeight: 32.0,
-          ),
-          padding: EdgeInsets.zero,
         ),
       ],
     );
@@ -248,6 +279,90 @@ class PostCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  /// 수정/삭제 가능 여부 확인
+  bool _canEditOrDelete() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      print('DEBUG: 현재 사용자가 로그인되지 않음');
+      return false;
+    }
+    
+    print('DEBUG: 현재 사용자 UID: ${currentUser.uid}');
+    print('DEBUG: 게시물 작성자 UID: ${post.authorUid}');
+    print('DEBUG: 작성자 일치 여부: ${post.authorUid == currentUser.uid}');
+    
+    // Post 엔티티의 authorUid와 현재 사용자 UID 비교
+    return post.authorUid == currentUser.uid;
+  }
+
+  /// 액션 메뉴 표시
+  void _showActionMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 수정 버튼
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('수정'),
+              onTap: () {
+                Navigator.pop(context);
+                onEdit?.call();
+              },
+            ),
+            
+            // 삭제 버튼
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('삭제', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteConfirmDialog(context);
+              },
+            ),
+            
+            // 취소 버튼
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('취소'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 삭제 확인 다이얼로그
+  void _showDeleteConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('게시물 삭제'),
+        content: const Text('정말로 이 게시물을 삭제하시겠습니까?\n삭제된 게시물은 복구할 수 없습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onDelete?.call();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
     );
   }
 }

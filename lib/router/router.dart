@@ -6,9 +6,14 @@ import 'package:plant_community_app/providers/auth_providers.dart';
 import 'package:plant_community_app/presentation/pages/login_screen.dart';
 import 'package:plant_community_app/presentation/pages/signup_screen.dart';
 import 'package:plant_community_app/presentation/pages/forgot_password_screen.dart';
-import 'package:plant_community_app/presentation/pages/post_list_page.dart';
+import 'package:plant_community_app/screens/home_screen.dart';
+import 'package:plant_community_app/screens/post_write_screen.dart';
+import 'package:plant_community_app/screens/post_edit_screen.dart';
+import 'package:plant_community_app/screens/post_detail_screen.dart';
 import 'package:plant_community_app/presentation/pages/profile_screen.dart';
 import 'package:plant_community_app/presentation/pages/loading_screen.dart';
+import 'package:plant_community_app/presentation/pages/main_navigation_screen.dart';
+import 'package:plant_community_app/data/models/post_model.dart';
 
 /// GoRouter 설정
 /// 
@@ -109,25 +114,66 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SignupScreen(),
       ),
       
-      // 홈 화면 (게시물 목록)
+      // 메인 네비게이션 화면 (홈, 프로필 등)
       GoRoute(
         path: '/',
-        name: 'home',
-        builder: (context, state) => const PostListPage(),
+        name: 'main',
+        builder: (context, state) => const MainNavigationScreen(),
       ),
       
-      // 프로필 화면
-      GoRoute(
-        path: '/profile',
-        name: 'profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
       
       // 비밀번호 찾기 화면
       GoRoute(
         path: '/forgot-password',
         name: 'forgotPassword',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      
+      // 게시글 작성 화면
+      GoRoute(
+        path: '/post/write',
+        name: 'postWrite',
+        builder: (context, state) => const PostWriteScreen(),
+      ),
+      
+      // 게시글 상세 화면
+      GoRoute(
+        path: '/post/detail/:postId',
+        name: 'postDetail',
+        builder: (context, state) {
+          final postId = state.pathParameters['postId']!;
+          // 실제로는 Firestore에서 postId로 PostModel을 가져와야 하지만,
+          // 여기서는 임시로 빈 PostModel을 생성합니다.
+          // 실제 사용 시에는 HomeScreen에서 PostModel을 전달받아야 합니다.
+          final post = PostModel(
+            postId: postId,
+            authorUid: '',
+            title: '',
+            content: '',
+            createdAt: DateTime.now(),
+          );
+          return PostDetailScreen(post: post);
+        },
+      ),
+      
+      // 게시글 수정 화면
+      GoRoute(
+        path: '/post/edit/:postId',
+        name: 'postEdit',
+        builder: (context, state) {
+          final postId = state.pathParameters['postId']!;
+          // 실제로는 Firestore에서 postId로 PostModel을 가져와야 하지만,
+          // 여기서는 임시로 빈 PostModel을 생성합니다.
+          // 실제 사용 시에는 HomeScreen에서 PostModel을 전달받아야 합니다.
+          final post = PostModel(
+            postId: postId,
+            authorUid: '',
+            title: '',
+            content: '',
+            createdAt: DateTime.now(),
+          );
+          return PostEditScreen(post: post);
+        },
       ),
     ],
     

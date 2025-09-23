@@ -4,6 +4,7 @@ import 'package:plant_community_app/core/constants/app_constants.dart';
 import 'package:plant_community_app/router/router.dart';
 import 'package:plant_community_app/core/theme/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'firebase_options.dart';
 
 /// 반려 식물 커뮤니티 앱의 메인 진입점
@@ -16,7 +17,8 @@ import 'firebase_options.dart';
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform,);
+  // Firebase 초기화
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(
     // Riverpod ProviderScope로 앱 전체를 감쌉니다.

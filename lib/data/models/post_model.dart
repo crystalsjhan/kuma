@@ -1,153 +1,259 @@
-import 'package:json_annotation/json_annotation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:plant_community_app/domain/entities/post.dart';
 
+part 'post_model.freezed.dart';
 part 'post_model.g.dart';
 
-/// Post 데이터 모델
+/// Firestore posts 컬렉션의 게시물 데이터 모델
 /// 
-/// JSON 직렬화/역직렬화를 지원하며, 도메인 엔티티와 변환 기능을 제공합니다.
-/// 서버나 로컬 데이터베이스와의 데이터 교환에 사용됩니다.
-@JsonSerializable()
-class PostModel {
-  const PostModel({
-    required this.id,
-    required this.title,
-    required this.content,
-    required this.authorName,
-    required this.createdAt,
-    required this.type,
-    this.imageUrl,
-    this.likeCount = 0,
-    this.commentCount = 0,
-  });
+/// Firebase Firestore의 posts 컬렉션에서 게시물 정보를 관리하기 위한 데이터 모델입니다.
+/// freezed와 json_serializable을 사용하여 불변 객체로 구현되었습니다.
+@freezed
+class PostModel with _$PostModel {
+  const factory PostModel({
+    /// 게시물 고유 식별자
+    required String postId,
+    
+    /// 작성자 사용자 ID
+    required String authorUid,
+    
+    /// 게시물 제목
+    required String title,
+    
+    /// 게시물 내용
+    required String content,
+    
+    /// 첨부 이미지 URL 목록 (선택사항)
+    List<String>? imageURLs,
+    
+    /// 게시물 생성 시간 (DateTime)
+    required DateTime createdAt,
+    
+    /// 게시물 수정 시간 (선택사항)
+    DateTime? updatedAt,
+    
+    /// 좋아요 수 (기본값: 0)
+    @Default(0) int likeCount,
+    
+    /// 댓글 수 (기본값: 0)
+    @Default(0) int commentCount,
+    
+    /// 게시물 타입 (기본값: 'post')
+    @Default('post') String type,
+  }) = _PostModel;
 
-  /// JSON으로부터 PostModel 생성
-  factory PostModel.fromJson(Map<String, dynamic> json) =>
-      _$PostModelFromJson(json);
-
-  /// 도메인 엔티티로부터 PostModel 생성
-  factory PostModel.fromEntity(Post post) {
+  /// Firestore 문서에서 PostModel로 변환
+  factory PostModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data()!;
     return PostModel(
-      id: post.id,
-      title: post.title,
-      content: post.content,
-      authorName: post.authorName,
-      createdAt: post.createdAt.toIso8601String(),
-      type: post.type.value,
-      imageUrl: post.imageUrl,
-      likeCount: post.likeCount,
-      commentCount: post.commentCount,
+      postId: doc.id, // Firestore 문서 ID 사용
+      authorUid: data['authorUid'] as String,
+      title: data['title'] as String,
+      content: data['content'] as String,
+      imageURLs: (data['imageURLs'] as List<dynamic>?)?.cast<String>(),
+      createdAt: _timestampFromJson(data['createdAt']),
+      updatedAt: data['updatedAt'] != null ? _timestampFromJson(data['updatedAt']) : null,
+      likeCount: data['likeCount'] as int? ?? 0,
+      commentCount: data['commentCount'] as int? ?? 0,
+      type: data['type'] as String? ?? 'post',
     );
   }
 
-  /// 게시물 고유 ID
-  final String id;
+  /// JSON에서 PostModel로 변환
+  factory PostModel.fromJson(Map<String, dynamic> json) => _$PostModelFromJson(json);
 
-  /// 게시물 제목
-  final String title;
+  /// Post 엔티티에서 PostModel로 변환 (기존 코드 호환성)
+  factory PostModel.fromEntity(dynamic post) {
+    // Post 엔티티의 속성을 PostModel로 변환
+    return PostModel(
+      postId: post.id ?? '',
+      authorUid: post.authorUid ?? '',
+      title: post.title ?? '',
+      content: post.content ?? '',
+      imageURLs: post.imageUrl != null ? [post.imageUrl] : null,
+      createdAt: post.createdAt is String 
+          ? DateTime.parse(post.createdAt) 
+          : (post.createdAt ?? DateTime.now()),
+      updatedAt: null,
+      likeCount: post.likeCount ?? 0,
+      commentCount: post.commentCount ?? 0,
+      type: post.type ?? 'post',
+    );
+  }
+}
 
-  /// 게시물 내용
-  final String content;
+/// Timestamp를 DateTime으로 변환하는 헬퍼 함수
+DateTime _timestampFromJson(dynamic timestamp) {
+  if (timestamp is Timestamp) {
+    return timestamp.toDate();
+  } else if (timestamp is Map<String, dynamic>) {
+    // Firestore Timestamp JSON 형태
+    return DateTime.fromMillisecondsSinceEpoch(
+      (timestamp['_seconds'] as int) * 1000 + 
+      ((timestamp['_nanoseconds'] as int) / 1000000).round(),
+    );
+  } else if (timestamp is int) {
+    // Unix timestamp (seconds)
+    return DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+  } else if (timestamp is String) {
+    // ISO 8601 문자열
+    return DateTime.parse(timestamp);
+  } else {
+    throw ArgumentError('Invalid timestamp format: $timestamp');
+  }
+}
 
-  /// 작성자 이름
-  @JsonKey(name: 'author_name')
-  final String authorName;
+/// PostModel 확장 메서드
+extension PostModelExtension on PostModel {
+  /// Firestore 문서 데이터로 변환
+  Map<String, dynamic> toFirestore() {
+    return {
+      'postId': postId,
+      'authorUid': authorUid,
+      'title': title,
+      'content': content,
+      'imageURLs': imageURLs,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
+      'likeCount': likeCount,
+      'commentCount': commentCount,
+      'type': type,
+    };
+  }
 
-  /// 작성일시 (ISO 8601 문자열)
-  @JsonKey(name: 'created_at')
-  final String createdAt;
+  /// 이미지가 있는지 확인
+  bool get hasImages => imageURLs != null && imageURLs!.isNotEmpty;
 
-  /// 게시물 타입 ('question' 또는 'diary')
-  final String type;
+  /// 이미지 개수
+  int get imageCount => imageURLs?.length ?? 0;
 
-  /// 첨부 이미지 URL (선택사항)
-  @JsonKey(name: 'image_url')
-  final String? imageUrl;
+  /// 게시물이 수정되었는지 확인
+  bool get isEdited => updatedAt != null;
 
-  /// 좋아요 수
-  @JsonKey(name: 'like_count')
-  final int likeCount;
+  /// 게시물 생성 후 경과 시간 (예: "3일 전")
+  String get timeSinceCreated {
+    final now = DateTime.now();
+    final created = createdAt;
+    final difference = now.difference(created);
 
-  /// 댓글 수
-  @JsonKey(name: 'comment_count')
-  final int commentCount;
+    if (difference.inDays > 0) {
+      return '${difference.inDays}일 전';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}시간 전';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}분 전';
+    } else {
+      return '방금 전';
+    }
+  }
 
-  /// PostModel을 JSON으로 변환
-  Map<String, dynamic> toJson() => _$PostModelToJson(this);
+  /// 게시물 수정 후 경과 시간 (예: "3일 전")
+  String get timeSinceUpdated {
+    if (updatedAt == null) return '';
+    
+    final now = DateTime.now();
+    final updated = updatedAt!;
+    final difference = now.difference(updated);
 
-  /// PostModel을 도메인 엔티티로 변환
+    if (difference.inDays > 0) {
+      return '${difference.inDays}일 전 수정';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}시간 전 수정';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}분 전 수정';
+    } else {
+      return '방금 전 수정';
+    }
+  }
+
+  /// 좋아요가 많은지 확인 (임계값: 10)
+  bool get isPopular => likeCount >= 10;
+
+  /// 댓글이 많은지 확인 (임계값: 5)
+  bool get hasManyComments => commentCount >= 5;
+
+  /// 게시물 요약 (내용의 처음 100자)
+  String get summary {
+    if (content.length <= 100) return content;
+    return '${content.substring(0, 100)}...';
+  }
+
+  /// PostModel을 Post 엔티티로 변환 (기존 코드 호환성)
   Post toEntity() {
+    // Post 엔티티를 직접 생성하여 반환
     return Post(
-      id: id,
+      id: postId,
       title: title,
       content: content,
-      authorName: authorName,
-      createdAt: DateTime.parse(createdAt),
+      authorName: '사용자 ${authorUid.substring(0, 8)}...',
+      authorUid: authorUid,
+      createdAt: createdAt,
       type: PostType.fromString(type),
-      imageUrl: imageUrl,
+      imageUrl: imageURLs?.isNotEmpty == true ? imageURLs!.first : null,
       likeCount: likeCount,
       commentCount: commentCount,
     );
   }
 
-  /// copyWith 메서드
-  PostModel copyWith({
-    String? id,
-    String? title,
-    String? content,
-    String? authorName,
-    String? createdAt,
-    String? type,
-    String? imageUrl,
-    int? likeCount,
-    int? commentCount,
-  }) {
-    return PostModel(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      content: content ?? this.content,
-      authorName: authorName ?? this.authorName,
-      createdAt: createdAt ?? this.createdAt,
-      type: type ?? this.type,
-      imageUrl: imageUrl ?? this.imageUrl,
-      likeCount: likeCount ?? this.likeCount,
-      commentCount: commentCount ?? this.commentCount,
-    );
-  }
-
-  @override
-  String toString() {
-    return 'PostModel(id: $id, title: $title, type: $type, authorName: $authorName)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is PostModel &&
-        other.id == id &&
-        other.title == title &&
-        other.content == content &&
-        other.authorName == authorName &&
-        other.createdAt == createdAt &&
-        other.type == type &&
-        other.imageUrl == imageUrl &&
-        other.likeCount == likeCount &&
-        other.commentCount == commentCount;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(
-      id,
-      title,
-      content,
-      authorName,
-      createdAt,
-      type,
-      imageUrl,
-      likeCount,
-      commentCount,
-    );
-  }
+  /// id getter (기존 코드 호환성)
+  String get id => postId;
 }
 
+/// PostModel 생성 헬퍼 클래스
+class PostModelBuilder {
+  /// 새 게시물 생성
+  static PostModel createNew({
+    required String postId,
+    required String authorUid,
+    required String title,
+    required String content,
+    List<String>? imageURLs,
+  }) {
+    return PostModel(
+      postId: postId,
+      authorUid: authorUid,
+      title: title,
+      content: content,
+      imageURLs: imageURLs,
+      createdAt: DateTime.now(),
+      likeCount: 0,
+      commentCount: 0,
+    );
+  }
+
+  /// 게시물 수정
+  static PostModel updatePost({
+    required PostModel originalPost,
+    String? title,
+    String? content,
+    List<String>? imageURLs,
+  }) {
+    return originalPost.copyWith(
+      title: title ?? originalPost.title,
+      content: content ?? originalPost.content,
+      imageURLs: imageURLs,
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  /// 좋아요 수 증가
+  static PostModel incrementLike(PostModel post) {
+    return post.copyWith(likeCount: post.likeCount + 1);
+  }
+
+  /// 좋아요 수 감소
+  static PostModel decrementLike(PostModel post) {
+    return post.copyWith(likeCount: (post.likeCount - 1).clamp(0, double.infinity).toInt());
+  }
+
+  /// 댓글 수 증가
+  static PostModel incrementComment(PostModel post) {
+    return post.copyWith(commentCount: post.commentCount + 1);
+  }
+
+  /// 댓글 수 감소
+  static PostModel decrementComment(PostModel post) {
+    return post.copyWith(commentCount: (post.commentCount - 1).clamp(0, double.infinity).toInt());
+  }
+}

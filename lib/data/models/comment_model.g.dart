@@ -1,39 +1,29 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'post_model.dart';
+part of 'comment_model.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$PostModelImpl _$$PostModelImplFromJson(Map<String, dynamic> json) =>
-    _$PostModelImpl(
+_$CommentModelImpl _$$CommentModelImplFromJson(Map<String, dynamic> json) =>
+    _$CommentModelImpl(
+      commentId: json['commentId'] as String,
       postId: json['postId'] as String,
       authorUid: json['authorUid'] as String,
-      title: json['title'] as String,
       content: json['content'] as String,
-      imageURLs: (json['imageURLs'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: json['updatedAt'] == null
           ? null
           : DateTime.parse(json['updatedAt'] as String),
-      likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
-      commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
-      type: json['type'] as String? ?? 'post',
     );
 
-Map<String, dynamic> _$$PostModelImplToJson(_$PostModelImpl instance) =>
+Map<String, dynamic> _$$CommentModelImplToJson(_$CommentModelImpl instance) =>
     <String, dynamic>{
+      'commentId': instance.commentId,
       'postId': instance.postId,
       'authorUid': instance.authorUid,
-      'title': instance.title,
       'content': instance.content,
-      'imageURLs': instance.imageURLs,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
-      'likeCount': instance.likeCount,
-      'commentCount': instance.commentCount,
-      'type': instance.type,
     };

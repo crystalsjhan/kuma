@@ -8,6 +8,7 @@ class Post extends Equatable {
     required this.title,
     required this.content,
     required this.authorName,
+    required this.authorUid,
     required this.createdAt,
     required this.type,
     this.imageUrl,
@@ -26,6 +27,9 @@ class Post extends Equatable {
 
   /// 작성자 이름
   final String authorName;
+
+  /// 작성자 UID
+  final String authorUid;
 
   /// 작성일시
   final DateTime createdAt;
@@ -58,6 +62,7 @@ class Post extends Equatable {
     String? title,
     String? content,
     String? authorName,
+    String? authorUid,
     DateTime? createdAt,
     PostType? type,
     String? imageUrl,
@@ -69,6 +74,7 @@ class Post extends Equatable {
       title: title ?? this.title,
       content: content ?? this.content,
       authorName: authorName ?? this.authorName,
+      authorUid: authorUid ?? this.authorUid,
       createdAt: createdAt ?? this.createdAt,
       type: type ?? this.type,
       imageUrl: imageUrl ?? this.imageUrl,
@@ -83,6 +89,7 @@ class Post extends Equatable {
         title,
         content,
         authorName,
+        authorUid,
         createdAt,
         type,
         imageUrl,
